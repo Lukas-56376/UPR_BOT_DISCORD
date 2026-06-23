@@ -70,8 +70,7 @@ class PresidentView(discord.ui.View):
             description=(
                 f"**Current POTUS:** {self.potus}\n"
                 f"**Current VPOTUS:** {vpotus_str}\n"
-                f"**Lives:** {hearts}"
-                
+                f"**Lives:** {hearts}\n"
                 f":h President: {self.potus}- Location:\n"
             ),
             color=0xE05C5C,
