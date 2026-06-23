@@ -131,7 +131,7 @@ class PresidentView(discord.ui.View):
         if self.lives <= 0:
             await self.civilian_win(
                 interaction,
-                f"**{self.potus}** (POTUS) has run out of lives — the civilians prevail!",
+                f"**{self.potus}** (POTUS) has run out of lives — the civilians won!",
             )
             return
 
@@ -154,7 +154,7 @@ class PresidentView(discord.ui.View):
         else:
             await self.civilian_win(
                 interaction,
-                "The POTUS left and there is **no VPOTUS** to take over — the civilians prevail!",
+                "The POTUS left and there is **no VPOTUS** to take over — the civilians won!",
             )
 
     @discord.ui.button(label="VPOTUS & POTUS left", style=discord.ButtonStyle.secondary, emoji="🏳️")
@@ -164,7 +164,7 @@ class PresidentView(discord.ui.View):
             return
         await self.civilian_win(
             interaction,
-            "Both the **POTUS and VPOTUS** have abandoned their posts — the civilians prevail!",
+            "Both the **POTUS and VPOTUS** have abandoned their posts — the civilians wom!",
         )
 
     @discord.ui.button(label="PRTY over", style=discord.ButtonStyle.success, emoji="🎉")
@@ -201,8 +201,6 @@ async def president_log(
             await interaction.response.send_message(
                 f"⏳ This command is on a global **5-minute cooldown**!\n"
                 f"Please wait **{minutes}m {seconds}s** more.\n"
-                f"*(Buttons on active logs still work!)*",
-                ephemeral=True,
             )
             return
 
