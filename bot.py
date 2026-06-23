@@ -71,6 +71,8 @@ class PresidentView(discord.ui.View):
                 f"**Current POTUS:** {self.potus}\n"
                 f"**Current VPOTUS:** {vpotus_str}\n"
                 f"**Lives:** {hearts}"
+                
+                f":h President: {self.potus}- Location:\n"
             ),
             color=0xE05C5C,
         )
