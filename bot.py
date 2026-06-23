@@ -120,7 +120,7 @@ class PresidentView(discord.ui.View):
             remaining = int((self.died_cooldown_until - now).total_seconds())
             minutes, seconds = divmod(remaining, 60)
             await interaction.response.send_message(
-                f"⏳ This button is on cooldown for **{minutes}m {seconds}s** more.",
+                f"⏳ This button is on cooldown for **{minutes}m {seconds}s** ",
                 ephemeral=True,
             )
             return
@@ -200,7 +200,8 @@ async def president_log(
             minutes, seconds = divmod(remaining, 60)
             await interaction.response.send_message(
                 f"⏳ This command is on a global **5-minute cooldown**!\n"
-                f"Please wait **{minutes}m {seconds}s** more.\n"
+                f"Please wait **{minutes}m {seconds}s** more.\n",
+                ephemeral=True,
             )
             return
 
