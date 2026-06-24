@@ -275,11 +275,11 @@ async def cmd_h(interaction: discord.Interaction):
         "`/h` → Show this help message."
     ), inline=False)
     embed.add_field(name="🎮  Buttons", value=(
-        "**POTUS died** — Remove 1 life\n"
-        "**PRTY over** — Presidency wins\n"
-        "**POTUS left** — VPOTUS becomes POTUS\n"
-        "**VPOTUS & POTUS left** — Civilians win\n"
-        "**✏️ Change Users** — Edit POTUS / VPOTUS names"
+        "**POTUS Died** — Remove 1 life\n"
+        "**PRTY Over** — Presidency wins\n"
+        "**POTUS Left** — VPOTUS becomes POTUS\n"
+        "**VPOTUS & POTUS Left** — Civilians win\n"
+        "**✏️ Change Users** — Edit POTUS / VPOTUS"
     ), inline=False)
     embed.add_field(name="⚙️  Rules", value=(
         "• Requires **On-Duty** role\n"
