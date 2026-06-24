@@ -153,13 +153,12 @@ class PresidentView(discord.ui.View):
         after_lives = self.lives - 1
 
         async def apply(ci: discord.Interaction):
-            pv.lives -= 1
-            if pv.lives <= 0:
-                pv.disable_all()
-                embed = pv.build_end_embed("🏴  The civilians have won!")
-            else:
-                embed = pv.build_embed()
-            await orig.edit(embed=embed, view=pv)
+          if pv.lives <= 0:
+    pv.disable_all()
+    embed = pv.build_end_embed("🏴  The civilians have won!")
+else:
+    embed = pv.build_embed()
+await orig.edit(embed=embed, view=pv)
             await ci.response.edit_message(content="✅  Done!", view=None)
 
         after_txt = "**0 — Log will end!**" if after_lives <= 0 else f"**{after_lives}**"
@@ -178,7 +177,7 @@ class PresidentView(discord.ui.View):
         async def apply(ci: discord.Interaction):
             pv.disable_all()
             embed = pv.build_end_embed("🎉  The POTUS & VPOTUS have won!")
-            await orig.edit(embed=embed, view=pv)
+          await orig.edit(embed=embed, view=None)
             await ci.response.edit_message(content="✅  Done!", view=None)
 
         await interaction.response.send_message(
@@ -215,7 +214,7 @@ class PresidentView(discord.ui.View):
         async def apply(ci: discord.Interaction):
             pv.disable_all()
             embed = pv.build_end_embed("🏴  The civilians have won!")
-            await orig.edit(embed=embed, view=pv)
+          await orig.edit(embed=embed, view=None)
             await ci.response.edit_message(content="✅  Done!", view=None)
 
         await interaction.response.send_message(
