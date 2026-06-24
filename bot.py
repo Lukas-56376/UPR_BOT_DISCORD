@@ -1,8 +1,3 @@
-"""
-President Log Bot — discord.py
-USA President Roleplay tracker with ER:LC API integration.
-"""
-
 import discord
 from discord import app_commands
 from typing import Callable, Awaitable
@@ -49,7 +44,6 @@ def has_role(member: discord.Member) -> bool:
 # ── ER:LC API ─────────────────────────────────────────────────────────────────
 
 async def erlc(command: str):
-    """Send one command to the ER:LC server."""
     if not ERLC_API_KEY:
         return
     try:
@@ -65,20 +59,15 @@ async def erlc(command: str):
         print(f"[ER:LC] Error: {e}")
 
 async def erlc_seq(*commands: str):
-    """Send multiple commands with a short delay between each."""
     for cmd in commands:
         await erlc(cmd)
         await asyncio.sleep(0.6)
 
 async def erlc_after(delay: float, command: str):
-    """Send a command after a delay (runs in background, non-blocking)."""
     await asyncio.sleep(delay)
     await erlc(command)
 
-# ── ER:LC command sets (from the UPR script) ──────────────────────────────────
-
 async def erlc_potus_died(lives_remaining: int):
-    """Commands when POTUS loses a life but survives (1 or 2 lives left)."""
     life_word = "life" if lives_remaining == 1 else "lives"
     await erlc_seq(
         f":m ATTENTION: The president has lost a life. He/she now has {lives_remaining} {life_word} remaining. "
@@ -86,14 +75,12 @@ async def erlc_potus_died(lives_remaining: int):
         ":pt 120",
         ":heal all",
     )
-    # Schedule the peacetimer-ended hint after exactly 120 seconds
     asyncio.create_task(erlc_after(
         120,
         f":h The peacetimer has now ended. The president can be killed and has {lives_remaining} {life_word} remaining.",
     ))
 
 async def erlc_civilians_win():
-    """Commands when POTUS loses all 3 lives."""
     await erlc_seq(
         ":m IMPORTANT: The civilians have won! The president has lost all 3 of their lives. "
         "An election to decide the next president will begin shortly.",
@@ -101,20 +88,17 @@ async def erlc_civilians_win():
     )
 
 async def erlc_presidency_wins():
-    """Commands when the presidential term ends with a presidency victory."""
     await erlc(
         ":m IMPORTANT: The president has won! The president managed to stay alive until the end of the timer. "
         "An election to decide the next president will begin shortly."
     )
 
 async def erlc_potus_left(new_potus: str):
-    """Commands when POTUS leaves and VPOTUS takes over."""
     await erlc(
         f":m IMPORTANT: The president has left the game therefore the VP, {new_potus}, is the new president."
     )
 
 async def erlc_both_left():
-    """Commands when both POTUS and VPOTUS leave."""
     await erlc(
         ":m IMPORTANT: The president and VP have both left the game therefore "
         "an election to decide the next president will begin soon."
@@ -184,8 +168,6 @@ class PresidentView(discord.ui.View):
         self.last_edited: int | None = None
         self.ended       = False
 
-    # ── Embed ─────────────────────────────────────────────────────────────────
-
     def _base(self, title: str, color: int) -> discord.Embed:
         e = discord.Embed(title=title, color=color)
         e.set_author(name=self.author.display_name, icon_url=self.author.display_avatar.url)
@@ -194,10 +176,10 @@ class PresidentView(discord.ui.View):
         return e
 
     def _timestamps(self, embed: discord.Embed):
-        edited = f"<t:{self.last_edited}:R>" if self.last_edited else "*Not yet edited*"
+        edited = f"<t:{self.last_edited}:f> (<t:{self.last_edited}:R>)" if self.last_edited else "*Not yet edited*"
         embed.add_field(
-            name="🕐  Timestamps",
-            value=f"**Created:** <t:{self.created_at}:f>\n**Last edited:** {edited}",
+            name="Timestamps",
+            value=f"Created: <t:{self.created_at}:f>\nLast Edited: {edited}",
             inline=False,
         )
 
@@ -226,8 +208,6 @@ class PresidentView(discord.ui.View):
         e.timestamp = discord.utils.utcnow()
         return e
 
-    # ── Helpers ───────────────────────────────────────────────────────────────
-
     def disable_all(self):
         for item in self.children:
             item.disabled = True
@@ -242,8 +222,6 @@ class PresidentView(discord.ui.View):
             return False
         return True
 
-    # ── Buttons — Row 0 ───────────────────────────────────────────────────────
-
     @discord.ui.button(label="POTUS died", style=discord.ButtonStyle.danger, row=0)
     async def potus_died(self, interaction: discord.Interaction, button: discord.ui.Button):
         if not await self.guard(interaction): return
@@ -256,7 +234,7 @@ class PresidentView(discord.ui.View):
             if pv.lives <= 0:
                 pv.disable_all()
                 asyncio.create_task(erlc_civilians_win())
-                await orig.edit(embed=pv.build_end_embed("🏴  The civilians have won!"), view=pv)
+                await orig.edit(embed=pv.build_end_embed("The civilians have won!"), view=pv)
             else:
                 asyncio.create_task(erlc_potus_died(pv.lives))
                 await orig.edit(embed=pv.build_embed(), view=pv)
@@ -276,7 +254,7 @@ class PresidentView(discord.ui.View):
             pv.last_edited = int(time.time())
             pv.disable_all()
             asyncio.create_task(erlc_presidency_wins())
-            await orig.edit(embed=pv.build_end_embed("🎉  The POTUS & VPOTUS have won!"), view=pv)
+            await orig.edit(embed=pv.build_end_embed("The POTUS & VPOTUS have won!"), view=pv)
             await ci.response.edit_message(content="✅  Done!", view=None)
 
         await interaction.response.send_message(
@@ -289,10 +267,10 @@ class PresidentView(discord.ui.View):
         orig, pv = interaction.message, self
 
         async def apply(ci: discord.Interaction):
-            old_potus       = pv.potus
-            pv.potus        = pv.vpotus
-            pv.vpotus       = "None"
-            pv.last_edited  = int(time.time())
+            old_potus      = pv.potus
+            pv.potus       = pv.vpotus
+            pv.vpotus      = "None"
+            pv.last_edited = int(time.time())
             asyncio.create_task(erlc_potus_left(pv.potus))
             await orig.edit(embed=pv.build_embed(), view=pv)
             await ci.response.edit_message(
@@ -311,14 +289,12 @@ class PresidentView(discord.ui.View):
             pv.last_edited = int(time.time())
             pv.disable_all()
             asyncio.create_task(erlc_both_left())
-            await orig.edit(embed=pv.build_end_embed("🏴  The civilians have won!"), view=pv)
+            await orig.edit(embed=pv.build_end_embed("The civilians have won!"), view=pv)
             await ci.response.edit_message(content="✅  Done!", view=None)
 
         await interaction.response.send_message(
             f"⚠️  **Are you sure?**\nBoth `{self.potus}` and `{self.vpotus}` will leave.\n**Civilians will win!**",
             view=ConfirmView(apply), ephemeral=True)
-
-    # ── Buttons — Row 1 ───────────────────────────────────────────────────────
 
     @discord.ui.button(label="Change Users", style=discord.ButtonStyle.secondary, row=1)
     async def change_users(self, interaction: discord.Interaction, button: discord.ui.Button):
@@ -346,7 +322,6 @@ async def president_log(interaction: discord.Interaction, potus: str, vpotus: st
     view = PresidentView(potus=potus, vpotus=vpotus, lives=3, author=interaction.user)
     await interaction.response.send_message(embed=view.build_embed(), view=view)
 
-
 @tree.command(name="h", description="President Roleplay Bot — help")
 async def cmd_h(interaction: discord.Interaction):
     e = discord.Embed(title="UPR - President Log Bot — Help", color=COLOR_ACTIVE)
@@ -368,7 +343,6 @@ async def cmd_h(interaction: discord.Interaction):
         "• All actions require confirmation"
     ), inline=False)
     await interaction.response.send_message(embed=e, ephemeral=True)
-
 
 tree.add_command(president_group)
 
