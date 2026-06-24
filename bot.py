@@ -234,7 +234,7 @@ class PresidentView(discord.ui.View):
             if pv.lives <= 0:
                 pv.disable_all()
                 asyncio.create_task(erlc_civilians_win())
-                await orig.edit(embed=pv.build_end_embed("The civilians have won!"), view=pv)
+                await orig.edit(embed=pv.build_end_embed("The civilians have won!"), view=None)
             else:
                 asyncio.create_task(erlc_potus_died(pv.lives))
                 await orig.edit(embed=pv.build_embed(), view=pv)
@@ -254,7 +254,7 @@ class PresidentView(discord.ui.View):
             pv.last_edited = int(time.time())
             pv.disable_all()
             asyncio.create_task(erlc_presidency_wins())
-            await orig.edit(embed=pv.build_end_embed("The POTUS & VPOTUS have won!"), view=pv)
+            await orig.edit(embed=pv.build_end_embed("The POTUS & VPOTUS have won!"), view=None)
             await ci.response.edit_message(content="✅  Done!", view=None)
 
         await interaction.response.send_message(
@@ -289,7 +289,7 @@ class PresidentView(discord.ui.View):
             pv.last_edited = int(time.time())
             pv.disable_all()
             asyncio.create_task(erlc_both_left())
-            await orig.edit(embed=pv.build_end_embed("The civilians have won!"), view=pv)
+            await orig.edit(embed=pv.build_end_embed("The civilians have won!"), view=None)
             await ci.response.edit_message(content="✅  Done!", view=None)
 
         await interaction.response.send_message(
