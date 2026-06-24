@@ -156,7 +156,7 @@ class PresidentView(discord.ui.View):
             pv.lives -= 1
             if pv.lives <= 0:
                pv.disable_all()
-                embed = pv.build_end_embed("🏴  The civilians have won!")
+              embed = pv.build_end_embed("🏴  The civilians have won!")
                 await orig.edit(embed=embed, view=None)
             else:
                 embed = pv.build_embed()
