@@ -156,7 +156,7 @@ class PresidentView(discord.ui.View):
             pv.lives -= 1
             if pv.lives <= 0:
                 pv.disable_all()
-                embed = pv.build_end_embed("🏴  The civilians have won!")
+                embed = pv.build_end_embed(" The civilians have won!")
                 await orig.edit(embed=embed, view=None)
             else:
                 embed = pv.build_embed()
@@ -178,7 +178,7 @@ class PresidentView(discord.ui.View):
 
         async def apply(ci: discord.Interaction):
             pv.disable_all()
-            embed = pv.build_end_embed("🎉  The POTUS & VPOTUS have won!")
+            embed = pv.build_end_embed(" The POTUS & VPOTUS have won!")
             await orig.edit(embed=embed, view=None)
             await ci.response.edit_message(content="✅  Done!", view=None)
 
@@ -215,7 +215,7 @@ class PresidentView(discord.ui.View):
 
         async def apply(ci: discord.Interaction):
             pv.disable_all()
-            embed = pv.build_end_embed("🏴  The civilians have won!")
+            embed = pv.build_end_embed(" The civilians have won!")
             await orig.edit(embed=embed, view=None)
             await ci.response.edit_message(content="✅  Done!", view=None)
 
@@ -227,7 +227,7 @@ class PresidentView(discord.ui.View):
 
     # ── Buttons — Row 1 ───────────────────────────────────────────────────────
 
-    @discord.ui.button(label="✏️  Change Users", style=discord.ButtonStyle.secondary, row=1)
+    @discord.ui.button(label="Change Users", style=discord.ButtonStyle.secondary, row=1)
     async def change_users(self, interaction: discord.Interaction, button: discord.ui.Button):
         if not await self.guard(interaction): return
         await interaction.response.send_modal(ChangeUsersModal(self, interaction.message))
@@ -270,16 +270,16 @@ async def cmd_h(interaction: discord.Interaction):
     embed = discord.Embed(title="UPR - President Log Bot — Help", color=COLOR_ACTIVE)
     embed.add_field(name="📋  Commands", value=(
         "`/president log <potus> <vpotus>`\n→ Start a new President Log.\n\n"
-        "`/h` → Show this help message."
+        "`/help` → Show this help message."
     ), inline=False)
     embed.add_field(name=" 🎹 Buttons", value=(
         "**POTUS Died** — Remove 1 life\n"
         "**PRTY Over** — Presidency wins\n"
         "**POTUS Left** — VPOTUS becomes POTUS\n"
         "**VPOTUS & POTUS Left** — Civilians win\n"
-        "** Change Users** — Edit POTUS / VPOTUS"
+        "**Change Users** — Edit POTUS / VPOTUS"
     ), inline=False)
-    embed.add_field(name="⚙️  Requirments", value=(
+    embed.add_field(name=" ⚙️ Requirments", value=(
         "• Requires **On-Duty** role\n"
         f"• Only usable in <#{ALLOWED_CHANNEL_ID}>\n"
         "• All buttons require confirmation"
