@@ -155,12 +155,12 @@ class PresidentView(discord.ui.View):
         async def apply(ci: discord.Interaction):
             pv.lives -= 1
             if pv.lives <= 0:
-               pv.disable_all()
-              embed = pv.build_end_embed("🏴  The civilians have won!")
+                pv.disable_all()
+                embed = pv.build_end_embed("🏴  The civilians have won!")
                 await orig.edit(embed=embed, view=None)
             else:
                 embed = pv.build_embed()
-            await orig.edit(embed=embed, view=pv)
+            await orig.edit(embed=embed, view=None)
             await ci.response.edit_message(content="✅  Done!", view=None)
 
         after_txt = "**0 — Log will end!**" if after_lives <= 0 else f"**{after_lives}**"
@@ -232,11 +232,9 @@ class PresidentView(discord.ui.View):
         if not await self.guard(interaction): return
         await interaction.response.send_modal(ChangeUsersModal(self, interaction.message))
 
-
 # ── Slash commands ────────────────────────────────────────────────────────────
 
 president_group = app_commands.Group(name="president", description="President roleplay commands")
-
 
 @president_group.command(name="log", description="Start a new President Log")
 @app_commands.describe(
@@ -267,7 +265,6 @@ async def president_log(
     view = PresidentView(potus=potus, vpotus=vpotus, lives=3, author=interaction.user)
     await interaction.response.send_message(embed=view.build_embed(), view=view)
 
-
 @tree.command(name="h", description="President Roleplay Bot — help")
 async def cmd_h(interaction: discord.Interaction):
     embed = discord.Embed(title="UPR - President Log Bot — Help", color=COLOR_ACTIVE)
@@ -289,9 +286,7 @@ async def cmd_h(interaction: discord.Interaction):
     ), inline=False)
     await interaction.response.send_message(embed=embed, ephemeral=True)
 
-
 tree.add_command(president_group)
-
 
 @client.event
 async def on_ready():
@@ -301,8 +296,9 @@ async def on_ready():
     print("─" * 40)
     print("Wow, it works but only Localy sadly :(")
 
-
 if not TOKEN:
     raise ValueError(" DISCORD_TOKEN not found! You did something wrong dumbass")
 
 client.run(TOKEN)
+
+Was soll ich hier ändern mit Zeilen Nummer damit mann die Buttons nicht mehr sieht
