@@ -272,14 +272,14 @@ async def cmd_h(interaction: discord.Interaction):
         "`/president log <potus> <vpotus>`\n→ Start a new President Log.\n\n"
         "`/h` → Show this help message."
     ), inline=False)
-    embed.add_field(name="🎮  Buttons", value=(
+    embed.add_field(name=" 🎹 Buttons", value=(
         "**POTUS Died** — Remove 1 life\n"
         "**PRTY Over** — Presidency wins\n"
         "**POTUS Left** — VPOTUS becomes POTUS\n"
         "**VPOTUS & POTUS Left** — Civilians win\n"
-        "**✏️ Change Users** — Edit POTUS / VPOTUS"
+        "** Change Users** — Edit POTUS / VPOTUS"
     ), inline=False)
-    embed.add_field(name="⚙️  Rules", value=(
+    embed.add_field(name="⚙️  Requirments", value=(
         "• Requires **On-Duty** role\n"
         f"• Only usable in <#{ALLOWED_CHANNEL_ID}>\n"
         "• All buttons require confirmation"
