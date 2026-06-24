@@ -302,6 +302,6 @@ async def on_ready():
 
 
 if not TOKEN:
-    raise ValueError("❌  DISCORD_TOKEN not found! You did something wrong dumbass)
+    raise ValueError(" DISCORD_TOKEN not found! You did something wrong dumbass")
 
 client.run(TOKEN)
