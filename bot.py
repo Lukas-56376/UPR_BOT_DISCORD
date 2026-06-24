@@ -300,5 +300,3 @@ if not TOKEN:
     raise ValueError(" DISCORD_TOKEN not found! You did something wrong dumbass")
 
 client.run(TOKEN)
-
-Was soll ich hier ändern mit Zeilen Nummer damit mann die Buttons nicht mehr sieht
