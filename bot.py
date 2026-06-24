@@ -160,7 +160,7 @@ class PresidentView(discord.ui.View):
                 await orig.edit(embed=embed, view=None)
             else:
                 embed = pv.build_embed()
-            await orig.edit(embed=embed, view=None)
+            await orig.edit(embed=embed, view=pv)
             await ci.response.edit_message(content="✅  Done!", view=None)
 
         after_txt = "**0 — Log will end!**" if after_lives <= 0 else f"**{after_lives}**"
