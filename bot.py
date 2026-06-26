@@ -45,18 +45,26 @@ def has_role(member: discord.Member) -> bool:
 
 async def erlc(command: str):
     if not ERLC_API_KEY:
+        print("[ER:LC] ⚠️  No API key set — skipping command.")
         return
     try:
         async with aiohttp.ClientSession() as session:
             async with session.post(
                 "https://api.policeroleplay.community/v1/server/command",
-                headers={"Server-Key": ERLC_API_KEY, "Content-Type": "application/json"},
+                headers={
+                    "Server-Key": ERLC_API_KEY,
+                    "Content-Type": "application/json",
+                },
                 json={"command": command},
             ) as resp:
-                status = "✅" if resp.status in (200, 204) else f"⚠️ {resp.status}"
-                print(f"[ER:LC] {status}  {command}")
+                body = await resp.text()
+                if resp.status in (200, 204):
+                    print(f"[ER:LC] ✅  Sent: {command}")
+                else:
+                    print(f"[ER:LC] ⚠️  Status {resp.status} for: {command}")
+                    print(f"[ER:LC] ⚠️  Response: {body}")
     except Exception as e:
-        print(f"[ER:LC] Error: {e}")
+        print(f"[ER:LC] ❌  Exception: {e}")
 
 async def erlc_seq(*commands: str):
     for cmd in commands:
