@@ -241,12 +241,13 @@ class PresidentView(discord.ui.View):
             pv.last_edited = int(time.time())
             if pv.lives <= 0:
                 pv.disable_all()
-                asyncio.create_task(erlc_civilians_win())
                 await orig.edit(embed=pv.build_end_embed("The civilians have won!"), view=None)
+                await ci.response.edit_message(content="✅  Done!", view=None)
+                await erlc_civilians_win()
             else:
-                asyncio.create_task(erlc_potus_died(pv.lives))
                 await orig.edit(embed=pv.build_embed(), view=pv)
-            await ci.response.edit_message(content="✅  Done!", view=None)
+                await ci.response.edit_message(content="✅  Done!", view=None)
+                await erlc_potus_died(pv.lives)
 
         after_txt = "**0 — Log will end!**" if after <= 0 else f"**{after}**"
         await interaction.response.send_message(
@@ -261,9 +262,9 @@ class PresidentView(discord.ui.View):
         async def apply(ci: discord.Interaction):
             pv.last_edited = int(time.time())
             pv.disable_all()
-            asyncio.create_task(erlc_presidency_wins())
             await orig.edit(embed=pv.build_end_embed("The POTUS & VPOTUS have won!"), view=None)
             await ci.response.edit_message(content="✅  Done!", view=None)
+            await erlc_presidency_wins()
 
         await interaction.response.send_message(
             "⚠️  **Are you sure?**\nThis ends the log with a **presidency victory**.",
@@ -279,10 +280,10 @@ class PresidentView(discord.ui.View):
             pv.potus       = pv.vpotus
             pv.vpotus      = "None"
             pv.last_edited = int(time.time())
-            asyncio.create_task(erlc_potus_left(pv.potus))
             await orig.edit(embed=pv.build_embed(), view=pv)
             await ci.response.edit_message(
                 content=f"✅  Done! `{old_potus}` left — `{pv.potus}` is now POTUS.", view=None)
+            await erlc_potus_left(pv.potus)
 
         await interaction.response.send_message(
             f"⚠️  **Are you sure?**\n`{self.potus}` will leave.\n`{self.vpotus}` becomes the new POTUS.",
@@ -296,9 +297,9 @@ class PresidentView(discord.ui.View):
         async def apply(ci: discord.Interaction):
             pv.last_edited = int(time.time())
             pv.disable_all()
-            asyncio.create_task(erlc_both_left())
             await orig.edit(embed=pv.build_end_embed("The civilians have won!"), view=None)
             await ci.response.edit_message(content="✅  Done!", view=None)
+            await erlc_both_left()
 
         await interaction.response.send_message(
             f"⚠️  **Are you sure?**\nBoth `{self.potus}` and `{self.vpotus}` will leave.\n**Civilians will win!**",
