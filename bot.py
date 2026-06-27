@@ -42,55 +42,57 @@ def has_role(member: discord.Member) -> bool:
     return any(r.id == REQUIRED_ROLE_ID for r in member.roles)
 
 # ── ER:LC API ─────────────────────────────────────────────────────────────────
+# Official docs: https://apidocs.policeroleplay.community
+# Header MUST be lowercase "server-key"
+# POST https://api.policeroleplay.community/v1/server/command
 
-async def erlc(command: str) -> tuple[bool, str]:
-    """Send one ER:LC command. Returns (success, message)."""
+async def erlc(command: str):
     if not ERLC_API_KEY:
-        return False, "No API key set"
+        print("[ER:LC] ⚠️  No API key set.")
+        return
     try:
         async with aiohttp.ClientSession() as session:
             async with session.post(
-                "https://api.erlc.gg/v1/server/command",
+                "https://api.policeroleplay.community/v1/server/command",
                 headers={
                     "server-key": ERLC_API_KEY,
                     "Content-Type": "application/json",
                 },
                 json={"command": command},
+                timeout=aiohttp.ClientTimeout(total=10),
             ) as resp:
                 body = await resp.text()
                 if resp.status in (200, 204):
                     print(f"[ER:LC] ✅  {command}")
-                    return True, "OK"
                 else:
-                    print(f"[ER:LC] ⚠️  {resp.status}: {body}")
-                    return False, f"HTTP {resp.status}: {body}"
+                    print(f"[ER:LC] ❌  {resp.status}: {body}")
+    except asyncio.TimeoutError:
+        print(f"[ER:LC] ❌  Timeout — is the server online?")
     except Exception as e:
         print(f"[ER:LC] ❌  {e}")
-        return False, str(e)
 
-async def erlc_seq(*commands: str) -> list[tuple[bool, str]]:
-    results = []
+async def erlc_seq(*commands: str):
     for cmd in commands:
-        ok, msg = await erlc(cmd)
-        results.append((ok, msg))
-        await asyncio.sleep(0.6)
-    return results
+        await erlc(cmd)
+        await asyncio.sleep(0.8)
 
-async def erlc_after(delay: float, command: str):
-    await asyncio.sleep(delay)
+async def erlc_delayed(seconds: float, command: str):
+    await asyncio.sleep(seconds)
     await erlc(command)
 
-async def erlc_potus_died(lives_remaining: int):
-    life_word = "life" if lives_remaining == 1 else "lives"
+# ── ER:LC script actions ──────────────────────────────────────────────────────
+
+async def erlc_life_lost(lives_left: int):
+    word = "life" if lives_left == 1 else "lives"
     await erlc_seq(
-        f":m ATTENTION: The president has lost a life. He/she now has {lives_remaining} {life_word} remaining. "
+        f":m ATTENTION: The president has lost a life. He/she now has {lives_left} {word} remaining. "
         f"There will now be a 2 minute cooldown. No shooting during the peacetimer. Everyone will now be healed.",
         ":pt 120",
         ":heal all",
     )
-    asyncio.create_task(erlc_after(
+    asyncio.create_task(erlc_delayed(
         120,
-        f":h The peacetimer has now ended. The president can be killed and has {lives_remaining} {life_word} remaining.",
+        f":h The peacetimer has now ended. The president can be killed and has {lives_left} {word} remaining.",
     ))
 
 async def erlc_civilians_win():
@@ -188,8 +190,11 @@ class PresidentView(discord.ui.View):
             e.set_image(url=BANNER_URL)
         return e
 
-    def _timestamps(self, embed: discord.Embed):
-        edited = f"<t:{self.last_edited}:f> (<t:{self.last_edited}:R>)" if self.last_edited else "*Not yet edited*"
+    def _add_timestamps(self, embed: discord.Embed):
+        edited = (
+            f"<t:{self.last_edited}:f> (<t:{self.last_edited}:R>)"
+            if self.last_edited else "*Not yet edited*"
+        )
         embed.add_field(
             name="Timestamps",
             value=f"Created: <t:{self.created_at}:f>\nLast Edited: {edited}",
@@ -199,15 +204,11 @@ class PresidentView(discord.ui.View):
     def build_embed(self) -> discord.Embed:
         hearts = "❤️" * self.lives + "🖤" * max(0, 3 - self.lives)
         e = self._base("UPR - President Log", COLOR_ACTIVE)
-        e.add_field(name="**__POTUS__**",  value=f"```{self.potus}```",  inline=True)
-        e.add_field(name="**__VPOTUS__**", value=f"```{self.vpotus}```", inline=True)
-        e.add_field(name="**__Lives__**",  value=hearts,                 inline=False)
-        e.add_field(
-            name="**Location · Copy-Paste Command**",
-            value=f"```\n:h President: {self.potus} - Location: \n```",
-            inline=False,
-        )
-        self._timestamps(e)
+        e.add_field(name="**__POTUS__**",                  value=f"```{self.potus}```",                                    inline=True)
+        e.add_field(name="**__VPOTUS__**",                 value=f"```{self.vpotus}```",                                   inline=True)
+        e.add_field(name="**__Lives__**",                  value=hearts,                                                   inline=False)
+        e.add_field(name="**Location · Copy-Paste Command**", value=f"```\n:h President: {self.potus} - Location: \n```", inline=False)
+        self._add_timestamps(e)
         e.set_footer(text="USA President Roleplay  •  UPR")
         e.timestamp = discord.utils.utcnow()
         return e
@@ -216,7 +217,7 @@ class PresidentView(discord.ui.View):
         e = self._base(title, COLOR_END)
         e.add_field(name="**__POTUS__**",  value=f"```{self.potus}```",  inline=True)
         e.add_field(name="**__VPOTUS__**", value=f"```{self.vpotus}```", inline=True)
-        self._timestamps(e)
+        self._add_timestamps(e)
         e.set_footer(text="USA President Roleplay  •  UPR")
         e.timestamp = discord.utils.utcnow()
         return e
@@ -235,6 +236,8 @@ class PresidentView(discord.ui.View):
             return False
         return True
 
+    # ── Buttons ───────────────────────────────────────────────────────────────
+
     @discord.ui.button(label="POTUS died", style=discord.ButtonStyle.danger, row=0)
     async def potus_died(self, interaction: discord.Interaction, button: discord.ui.Button):
         if not await self.guard(interaction): return
@@ -242,7 +245,7 @@ class PresidentView(discord.ui.View):
         after    = self.lives - 1
 
         async def apply(ci: discord.Interaction):
-            pv.lives -= 1
+            pv.lives      -= 1
             pv.last_edited = int(time.time())
             if pv.lives <= 0:
                 pv.disable_all()
@@ -252,11 +255,11 @@ class PresidentView(discord.ui.View):
             else:
                 await orig.edit(embed=pv.build_embed(), view=pv)
                 await ci.response.edit_message(content="✅  Done!", view=None)
-                await erlc_potus_died(pv.lives)
+                await erlc_life_lost(pv.lives)
 
-        after_txt = "**0 — Log will end!**" if after <= 0 else f"**{after}**"
+        txt = "**0 — Log will end!**" if after <= 0 else f"**{after}**"
         await interaction.response.send_message(
-            f"⚠️  **Are you sure?**\nRemoves 1 life from `{self.potus}`.\nLives after: {after_txt}",
+            f"⚠️  **Are you sure?**\nRemoves 1 life from `{self.potus}`.\nLives after: {txt}",
             view=ConfirmView(apply), ephemeral=True)
 
     @discord.ui.button(label="PRTY over", style=discord.ButtonStyle.success, row=0)
@@ -281,13 +284,13 @@ class PresidentView(discord.ui.View):
         orig, pv = interaction.message, self
 
         async def apply(ci: discord.Interaction):
-            old_potus      = pv.potus
+            old            = pv.potus
             pv.potus       = pv.vpotus
             pv.vpotus      = "None"
             pv.last_edited = int(time.time())
             await orig.edit(embed=pv.build_embed(), view=pv)
             await ci.response.edit_message(
-                content=f"✅  Done! `{old_potus}` left — `{pv.potus}` is now POTUS.", view=None)
+                content=f"✅  Done! `{old}` left — `{pv.potus}` is now POTUS.", view=None)
             await erlc_potus_left(pv.potus)
 
         await interaction.response.send_message(
@@ -324,17 +327,18 @@ president_group = app_commands.Group(name="president", description="President ro
 async def president_log(interaction: discord.Interaction, potus: str, vpotus: str):
     if interaction.channel_id != ALLOWED_CHANNEL_ID:
         await interaction.response.send_message(
-            f"❌  Only usable in <#{ALLOWED_CHANNEL_ID}>!", ephemeral=True); return
+            f"❌  Only usable in <#{ALLOWED_CHANNEL_ID}>!", ephemeral=True)
+        return
     if not isinstance(interaction.user, discord.Member) or not has_role(interaction.user):
         await interaction.response.send_message(
-            "❌  You need the **On-Duty** role!", ephemeral=True); return
-
+            "❌  You need the **On-Duty** role!", ephemeral=True)
+        return
     data = load_data()
     data["log_nr"] += 1
     save_data(data)
-
     view = PresidentView(potus=potus, vpotus=vpotus, lives=3, author=interaction.user)
     await interaction.response.send_message(embed=view.build_embed(), view=view)
+
 
 @tree.command(name="h", description="President Roleplay Bot — help")
 async def cmd_h(interaction: discord.Interaction):
@@ -358,7 +362,9 @@ async def cmd_h(interaction: discord.Interaction):
     ), inline=False)
     await interaction.response.send_message(embed=e, ephemeral=True)
 
+
 tree.add_command(president_group)
+
 
 @client.event
 async def on_ready():
@@ -366,12 +372,13 @@ async def on_ready():
     print(f"✅  Logged in as {client.user}  (ID: {client.user.id})")
     print(f"✅  Synced {len(synced)} slash command(s)")
     if ERLC_API_KEY:
-        print("✅  ER:LC API key found — in-game commands enabled!")
+        print("✅  ER:LC API key loaded — in-game commands enabled!")
     else:
-        print("⚠️  No ER:LC API key — add ERLC_API_KEY to .env to enable in-game commands.")
+        print("⚠️  No ER:LC API key — add ERLC_API_KEY to Railway Variables.")
     print("─" * 40)
 
+
 if not TOKEN:
-    raise ValueError("❌  DISCORD_TOKEN not found! Check your .env file.")
+    raise ValueError("❌  DISCORD_TOKEN not found! Check your .env / Railway Variables.")
 
 client.run(TOKEN)
