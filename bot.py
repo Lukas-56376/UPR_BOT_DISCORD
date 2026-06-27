@@ -43,33 +43,38 @@ def has_role(member: discord.Member) -> bool:
 
 # ── ER:LC API ─────────────────────────────────────────────────────────────────
 
-async def erlc(command: str):
+async def erlc(command: str) -> tuple[bool, str]:
+    """Send one ER:LC command. Returns (success, message)."""
     if not ERLC_API_KEY:
-        print("[ER:LC] ⚠️  No API key set — skipping command.")
-        return
+        return False, "No API key set"
     try:
         async with aiohttp.ClientSession() as session:
             async with session.post(
-                "https://api.policeroleplay.community/v1/server/command",
+                "https://api.erlc.gg/v1/server/command",
                 headers={
-                    "Server-Key": ERLC_API_KEY,
+                    "server-key": ERLC_API_KEY,
                     "Content-Type": "application/json",
                 },
                 json={"command": command},
             ) as resp:
                 body = await resp.text()
                 if resp.status in (200, 204):
-                    print(f"[ER:LC] ✅  Sent: {command}")
+                    print(f"[ER:LC] ✅  {command}")
+                    return True, "OK"
                 else:
-                    print(f"[ER:LC] ⚠️  Status {resp.status} for: {command}")
-                    print(f"[ER:LC] ⚠️  Response: {body}")
+                    print(f"[ER:LC] ⚠️  {resp.status}: {body}")
+                    return False, f"HTTP {resp.status}: {body}"
     except Exception as e:
-        print(f"[ER:LC] ❌  Exception: {e}")
+        print(f"[ER:LC] ❌  {e}")
+        return False, str(e)
 
-async def erlc_seq(*commands: str):
+async def erlc_seq(*commands: str) -> list[tuple[bool, str]]:
+    results = []
     for cmd in commands:
-        await erlc(cmd)
+        ok, msg = await erlc(cmd)
+        results.append((ok, msg))
         await asyncio.sleep(0.6)
+    return results
 
 async def erlc_after(delay: float, command: str):
     await asyncio.sleep(delay)
