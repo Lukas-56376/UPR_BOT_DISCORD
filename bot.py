@@ -42,43 +42,66 @@ def has_role(member: discord.Member) -> bool:
     return any(r.id == REQUIRED_ROLE_ID for r in member.roles)
 
 # ── ER:LC API ─────────────────────────────────────────────────────────────────
-# Official docs: https://apidocs.policeroleplay.community
-# Header MUST be lowercase "server-key"
+# Docs: https://apidocs.policeroleplay.community
+# Header must be lowercase: server-key
 # POST https://api.policeroleplay.community/v1/server/command
 
 async def erlc(command: str):
+    """Send one command to the ER:LC private server."""
     if not ERLC_API_KEY:
-        print("[ER:LC] ⚠️  No API key set.")
+        print("[ER:LC] ⚠️  No API key set — skipping.")
         return
+
     try:
         async with aiohttp.ClientSession() as session:
             async with session.post(
                 "https://api.policeroleplay.community/v1/server/command",
                 headers={
-                    "server-key": ERLC_API_KEY,
+                    "server-key": ERLC_API_KEY.strip(),
                     "Content-Type": "application/json",
                 },
                 json={"command": command},
                 timeout=aiohttp.ClientTimeout(total=10),
             ) as resp:
                 body = await resp.text()
-                if resp.status in (200, 204):
-                    print(f"[ER:LC] ✅  {command}")
-                else:
-                    print(f"[ER:LC] ❌  {resp.status}: {body}")
+                print(f"[ER:LC] status={resp.status} cmd={command!r} body={body!r}")
     except asyncio.TimeoutError:
-        print(f"[ER:LC] ❌  Timeout — is the server online?")
+        print("[ER:LC] ❌  Request timed out.")
     except Exception as e:
-        print(f"[ER:LC] ❌  {e}")
+        print(f"[ER:LC] ❌  {type(e).__name__}: {e}")
+
+
+async def erlc_test():
+    """Test the ER:LC connection on startup by fetching server info."""
+    if not ERLC_API_KEY:
+        return
+    try:
+        async with aiohttp.ClientSession() as session:
+            async with session.get(
+                "https://api.policeroleplay.community/v1/server",
+                headers={"server-key": ERLC_API_KEY.strip()},
+                timeout=aiohttp.ClientTimeout(total=10),
+            ) as resp:
+                body = await resp.text()
+                if resp.status == 200:
+                    print(f"[ER:LC] ✅  API connection OK — server info: {body[:80]}")
+                else:
+                    print(f"[ER:LC] ❌  API test failed: HTTP {resp.status} → {body}")
+    except Exception as e:
+        print(f"[ER:LC] ❌  API test exception: {e}")
+
 
 async def erlc_seq(*commands: str):
+    """Send multiple commands one by one."""
     for cmd in commands:
         await erlc(cmd)
         await asyncio.sleep(0.8)
 
-async def erlc_delayed(seconds: float, command: str):
+
+async def _delayed(seconds: float, command: str):
     await asyncio.sleep(seconds)
     await erlc(command)
+
 
 # ── ER:LC script actions ──────────────────────────────────────────────────────
 
@@ -90,10 +113,11 @@ async def erlc_life_lost(lives_left: int):
         ":pt 120",
         ":heal all",
     )
-    asyncio.create_task(erlc_delayed(
-        120,
-        f":h The peacetimer has now ended. The president can be killed and has {lives_left} {word} remaining.",
-    ))
+    # Schedule the :h reminder after 120 seconds
+    asyncio.get_event_loop().create_task(
+        _delayed(120, f":h The peacetimer has now ended. The president can be killed and has {lives_left} {word} remaining.")
+    )
+
 
 async def erlc_civilians_win():
     await erlc_seq(
@@ -102,16 +126,19 @@ async def erlc_civilians_win():
         ":prty 0",
     )
 
+
 async def erlc_presidency_wins():
     await erlc(
         ":m IMPORTANT: The president has won! The president managed to stay alive until the end of the timer. "
         "An election to decide the next president will begin shortly."
     )
 
+
 async def erlc_potus_left(new_potus: str):
     await erlc(
         f":m IMPORTANT: The president has left the game therefore the VP, {new_potus}, is the new president."
     )
+
 
 async def erlc_both_left():
     await erlc(
@@ -204,10 +231,10 @@ class PresidentView(discord.ui.View):
     def build_embed(self) -> discord.Embed:
         hearts = "❤️" * self.lives + "🖤" * max(0, 3 - self.lives)
         e = self._base("UPR - President Log", COLOR_ACTIVE)
-        e.add_field(name="**__POTUS__**",                  value=f"```{self.potus}```",                                    inline=True)
-        e.add_field(name="**__VPOTUS__**",                 value=f"```{self.vpotus}```",                                   inline=True)
-        e.add_field(name="**__Lives__**",                  value=hearts,                                                   inline=False)
-        e.add_field(name="**Location · Copy-Paste Command**", value=f"```\n:h President: {self.potus} - Location: \n```", inline=False)
+        e.add_field(name="**__POTUS__**",                     value=f"```{self.potus}```",                                    inline=True)
+        e.add_field(name="**__VPOTUS__**",                    value=f"```{self.vpotus}```",                                   inline=True)
+        e.add_field(name="**__Lives__**",                     value=hearts,                                                   inline=False)
+        e.add_field(name="**Location · Copy-Paste Command**", value=f"```\n:h President: {self.potus} - Location: \n```",    inline=False)
         self._add_timestamps(e)
         e.set_footer(text="USA President Roleplay  •  UPR")
         e.timestamp = discord.utils.utcnow()
@@ -235,8 +262,6 @@ class PresidentView(discord.ui.View):
             await interaction.response.send_message("❌  You need the **On-Duty** role!", ephemeral=True)
             return False
         return True
-
-    # ── Buttons ───────────────────────────────────────────────────────────────
 
     @discord.ui.button(label="POTUS died", style=discord.ButtonStyle.danger, row=0)
     async def potus_died(self, interaction: discord.Interaction, button: discord.ui.Button):
@@ -372,13 +397,14 @@ async def on_ready():
     print(f"✅  Logged in as {client.user}  (ID: {client.user.id})")
     print(f"✅  Synced {len(synced)} slash command(s)")
     if ERLC_API_KEY:
-        print("✅  ER:LC API key loaded — in-game commands enabled!")
+        print("✅  ER:LC API key found — testing connection...")
+        await erlc_test()
     else:
-        print("⚠️  No ER:LC API key — add ERLC_API_KEY to Railway Variables.")
+        print("⚠️  No ER:LC API key set!")
     print("─" * 40)
 
 
 if not TOKEN:
-    raise ValueError("❌  DISCORD_TOKEN not found! Check your .env / Railway Variables.")
+    raise ValueError("❌  DISCORD_TOKEN not found!")
 
 client.run(TOKEN)
