@@ -50,7 +50,7 @@ def _erlc_send(command: str):
     """Synchronous ER:LC API call — runs in a thread."""
     try:
         resp = requests.post(
-            "https://api.policeroleplay.community/v1/server/command",
+            "https://api.erlc.gg/v1/server/command",
             headers={
                 "server-key": ERLC_API_KEY,
                 "Content-Type": "application/json",
@@ -67,7 +67,7 @@ def _erlc_test():
     """Test API connection by fetching server info."""
     try:
         resp = requests.get(
-            "https://api.policeroleplay.community/v1/server",
+            "https://api.erlc.gg/v1/server",
             headers={"server-key": ERLC_API_KEY},
             timeout=10,
         )
